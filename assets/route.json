@@ -1,0 +1,212 @@
+[
+    {
+      "name": "Segment 1",
+      "start_location": "Waterton Canyon TH",
+      "finish_location": "South Platte River TH",
+      "distance": 15.6,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.4316,
+        "longitude": -105.0916
+      },
+      "finish_coords": {
+        "latitude": 39.3248,
+        "longitude": -105.1866
+      }
+    },
+    {
+      "name": "Segment 2",
+      "start_location": "South Platte River TH",
+      "finish_location": "Little Scraggy TH",
+      "distance": 11.0,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.3248,
+        "longitude": -105.1866
+      },
+      "finish_coords": {
+        "latitude": 39.3384,
+        "longitude": -105.2833
+      }
+    },
+    {
+      "name": "Segment 3",
+      "start_location": "Little Scraggy TH",
+      "finish_location": "Rolling Creek TH",
+      "distance": 12.2,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.3384,
+        "longitude": -105.2833
+      },
+      "finish_coords": {
+        "latitude": 39.3734,
+        "longitude": -105.3994
+      }
+    },
+    {
+      "name": "Segment 4",
+      "start_location": "Rolling Creek TH",
+      "finish_location": "Long Gulch",
+      "distance": 15.7,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.3734,
+        "longitude": -105.3994
+      },
+      "finish_coords": {
+        "latitude": 39.412,
+        "longitude": -105.617
+      }
+    },
+    {
+      "name": "Segment 5",
+      "start_location": "Long Gulch",
+      "finish_location": "Kenosha Pass",
+      "distance": 14.9,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.412,
+        "longitude": -105.617
+      },
+      "finish_coords": {
+        "latitude": 39.4133,
+        "longitude": -105.7567
+      }
+    },
+    {
+      "name": "Segment 6",
+      "start_location": "Kenosha Pass",
+      "finish_location": "Gold Hill TH",
+      "distance": 31.4,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.4133,
+        "longitude": -105.7567
+      },
+      "finish_coords": {
+        "latitude": 39.5492,
+        "longitude": -106.0158
+      }
+    },
+    {
+      "name": "Segment 7",
+      "start_location": "Gold Hill TH",
+      "finish_location": "Copper Mountain",
+      "distance": 13.5,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.5492,
+        "longitude": -106.0158
+      },
+      "finish_coords": {
+        "latitude": 39.5009,
+        "longitude": -106.1619
+      }
+    },
+    {
+      "name": "Segment 8",
+      "start_location": "Copper Mountain",
+      "finish_location": "Tennessee Pass",
+      "distance": 24.7,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.5009,
+        "longitude": -106.1619
+      },
+      "finish_coords": {
+        "latitude": 39.3667,
+        "longitude": -106.3167
+      }
+    },
+    {
+      "name": "Segment 9",
+      "start_location": "Tennessee Pass",
+      "finish_location": "Timberline Lake TH",
+      "distance": 12.9,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.3667,
+        "longitude": -106.3167
+      },
+      "finish_coords": {
+        "latitude": 39.197,
+        "longitude": -106.406
+      }
+    },
+    {
+      "name": "Segment 10",
+      "start_location": "Timberline Lake TH",
+      "finish_location": "Mount Massive TH",
+      "distance": 12.6,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.197,
+        "longitude": -106.406
+      },
+      "finish_coords": {
+        "latitude": 39.15177,
+        "longitude": -106.41918
+      }
+    },
+    {
+      "name": "Segment 11",
+      "start_location": "Mount Massive TH",
+      "finish_location": "Clear Creek Road",
+      "distance": 21.0,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.15177,
+        "longitude": -106.41918
+      },
+      "finish_coords": {
+        "latitude": 39.0101,
+        "longitude": -106.3765
+      }
+    },
+    {
+      "name": "Segment 12",
+      "start_location": "Clear Creek Road",
+      "finish_location": "Silver Creek TH",
+      "distance": 17.7,
+      "notes": "",
+      "start_coords": {
+        "latitude": 39.0101,
+        "longitude": -106.3765
+      },
+      "finish_coords": {
+        "latitude": 38.86572,
+        "longitude": -106.24149
+      }
+    },
+    {
+      "name": "Segment 13",
+      "start_location": "Silver Creek TH",
+      "finish_location": "Chalk Creek TH",
+      "distance": 21.7,
+      "notes": "",
+      "start_coords": {
+        "latitude": 38.86572,
+        "longitude": -106.24149
+      },
+      "finish_coords": {
+        "latitude": 38.6833,
+        "longitude": -106.2167
+      }
+    },
+    {
+      "name": "Segment 14",
+      "start_location": "Chalk Creek TH",
+      "finish_location": "US Hwy 50",
+      "distance": 20.2,
+      "notes": "",
+      "start_coords": {
+        "latitude": 38.6833,
+        "longitude": -106.2167
+      },
+      "finish_coords": {
+        "latitude": 38.5283,
+        "longitude": -106.2403
+      }
+    }
+  ]

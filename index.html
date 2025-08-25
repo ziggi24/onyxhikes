@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+    <link rel="stylesheet" href="/styles/main.css">
+    <script src="/scripts/main.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/gpxparser@3.0.8/dist/GPXParser.min.js"></script>
+    <title>Onyx Hiked the Colorado Trail!</title>
+</head>
+<body>
+    <header class="hero">
+        <div class="hero-content">
+            <h1><i class="fas fa-mountain"></i> Onyx Hiked the Colorado Trail!</h1>
+            <p class="hero-subtitle">Celebrating an incredible 258.2-mile journey through Colorado's wilderness</p>
+            <div class="stats-banner">
+                <div class="stat">
+                    <i class="fas fa-route"></i>
+                    <span class="stat-number">258.2</span>
+                    <span class="stat-label">miles</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-percentage"></i>
+                    <span class="stat-number">52.6%</span>
+                    <span class="stat-label">of Colorado Trail</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="stat-number">19</span>
+                    <span class="stat-label">days</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-mountain"></i>
+                    <span class="stat-number">12,845ft</span>
+                    <span class="stat-label">highest point</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-controls">
+                <button id="animate-route" class="btn-primary">
+                    <i class="fas fa-play"></i> Watch Onyx's Journey
+                </button>
+                <button id="reset-animation" class="btn-secondary">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+        </div>
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-info-circle"></i> Trail Segments</h2>
+                <p>Click on any segment to learn more about Onyx's journey</p>
+            </div>
+            
+            <div class="segment-info" id="segment-info">
+                <div class="welcome-message">
+                    <h3>Welcome to Onyx's Adventure!</h3>
+                    <p>From Waterton Canyon in Littleton to Monarch Pass, Onyx conquered 15 segments of the Colorado Trail. Click the animation button to watch their incredible journey unfold!</p>
+                    
+                    <div class="adventure-highlights">
+                        <h4><i class="fas fa-paw"></i> Wildlife Encounters</h4>
+                        <p>4 moose (3 female, 1 male), countless pikas, marmots, bighorn sheep, birds, deer, chipmunks, and squirrels</p>
+                        
+                        <h4><i class="fas fa-users"></i> Trail Friends</h4>
+                        <p>Met amazing people: Flower Girl, Sparrow, David, Chuck, Rich, Enigma, Cheezit, Chordage, Rebecca, Beatnik</p>
+                        
+                        <h4><i class="fas fa-city"></i> Towns Visited</h4>
+                        <p>Littleton, Breckenridge, Copper Mountain, Twin Lakes, Leadville, Salida</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="elevation-stats">
+                <h3><i class="fas fa-chart-line"></i> Elevation Profile</h3>
+                <div class="elevation-grid">
+                    <div class="elevation-item">
+                        <i class="fas fa-arrow-up text-green"></i>
+                        <span class="elevation-number">50,280ft</span>
+                        <span class="elevation-label">Total Ascent</span>
+                    </div>
+                    <div class="elevation-item">
+                        <i class="fas fa-arrow-down text-blue"></i>
+                        <span class="elevation-number">44,538ft</span>
+                        <span class="elevation-label">Total Descent</span>
+                    </div>
+                    <div class="elevation-item">
+                        <i class="fas fa-arrow-down text-orange"></i>
+                        <span class="elevation-number">5,500ft</span>
+                        <span class="elevation-label">Lowest Point</span>
+                    </div>
+                    <div class="elevation-item">
+                        <i class="fas fa-mountain text-purple"></i>
+                        <span class="elevation-number">12,845ft</span>
+                        <span class="elevation-label">Highest Point</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+</body>
+</html>
