@@ -208,5 +208,20 @@
         "latitude": 38.5283,
         "longitude": -106.2403
       }
+    },
+    {
+      "name": "Segment 15",
+      "start_location": "Tin Cup Pass Road",
+      "finish_location": "Boss Lake TH",
+      "distance": 13.5,
+      "notes": "CW05 - Final collegiate west segment",
+      "start_coords": {
+        "latitude": 38.6922,
+        "longitude": -106.4144
+      },
+      "finish_coords": {
+        "latitude": 38.5636,
+        "longitude": -106.3142
+      }
     }
   ]

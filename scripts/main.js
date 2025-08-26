@@ -63,25 +63,78 @@ async function loadGpxData() {
         trailGpxParser = new gpxParser();
         trailGpxParser.parse(gpxText);
         
-        // Extract track points from the parsed GPX
+        console.log('=== COMPLETE GPX ANALYSIS ===');
+        
+        // Analyze waypoints (these are likely the trailheads and markers)
+        if (trailGpxParser.waypoints && trailGpxParser.waypoints.length > 0) {
+            console.log(`📍 WAYPOINTS: ${trailGpxParser.waypoints.length} found`);
+            trailGpxParser.waypoints.forEach((wp, i) => {
+                console.log(`  ${i+1}: "${wp.name}" at [${wp.lat?.toFixed(6)}, ${wp.lon?.toFixed(6)}]`);
+            });
+        }
+        
+        // Analyze tracks (these contain the actual GPS paths)
         if (trailGpxParser.tracks && trailGpxParser.tracks.length > 0) {
-            const track = trailGpxParser.tracks[0]; // Get the first track
-            gpxTrailPoints = track.points.map(point => [point.lat, point.lon]);
+            console.log(`🛤️  TRACKS: ${trailGpxParser.tracks.length} found`);
+            trailGpxParser.tracks.forEach((track, i) => {
+                console.log(`  Track ${i+1}: "${track.name || 'Unnamed'}" - ${track.points?.length || 0} points`);
+                if (track.distance) {
+                    console.log(`    Distance: ${(track.distance.total/1000).toFixed(1)}km`);
+                }
+                if (track.points && track.points.length > 0) {
+                    const start = track.points[0];
+                    const end = track.points[track.points.length - 1];
+                    console.log(`    Start: [${start.lat?.toFixed(6)}, ${start.lon?.toFixed(6)}]`);
+                    console.log(`    End: [${end.lat?.toFixed(6)}, ${end.lon?.toFixed(6)}]`);
+                }
+            });
             
-            console.log(`Loaded GPX with ${gpxTrailPoints.length} points using GPXParser`);
-            console.log('Track name:', track.name);
-            console.log('Total distance:', track.distance.total, 'meters');
-            console.log('Cumulative distances available:', track.distance.cumul ? track.distance.cumul.length : 'No');
-            console.log('First few points:', gpxTrailPoints.slice(0, 3));
-            console.log('Last few points:', gpxTrailPoints.slice(-3));
-        } else {
-            throw new Error('No tracks found in GPX file');
+            // Use the main track for processing
+            const mainTrack = trailGpxParser.tracks[0];
+            gpxTrailPoints = mainTrack.points.map(point => [point.lat, point.lon]);
+            console.log(`✅ Extracted ${gpxTrailPoints.length} GPS points from main track`);
+        }
+        
+        // Analyze routes (alternative to tracks)
+        if (trailGpxParser.routes && trailGpxParser.routes.length > 0) {
+            console.log(`🗺️  ROUTES: ${trailGpxParser.routes.length} found`);
+            trailGpxParser.routes.forEach((route, i) => {
+                console.log(`  Route ${i+1}: "${route.name || 'Unnamed'}" - ${route.points?.length || 0} points`);
+            });
+        }
+        
+        // If we have multiple tracks, try to identify segment-specific tracks
+        if (trailGpxParser.tracks && trailGpxParser.tracks.length > 1) {
+            console.log('🔍 MULTIPLE TRACKS DETECTED - Analyzing for segment matches...');
+            analyzeTracksForSegments();
         }
         
     } catch (error) {
         console.error('Error loading GPX data:', error);
         gpxTrailPoints = [];
     }
+}
+
+function analyzeTracksForSegments() {
+    // If we have multiple tracks, they might correspond to individual segments
+    console.log('=== TRACK-TO-SEGMENT ANALYSIS ===');
+    
+    trailGpxParser.tracks.forEach((track, i) => {
+        if (track.name && track.points && track.points.length > 0) {
+            const trackName = track.name.toLowerCase();
+            console.log(`Track ${i+1}: "${track.name}"`);
+            console.log(`  Points: ${track.points.length}`);
+            console.log(`  Distance: ${track.distance ? (track.distance.total/1000).toFixed(1) + 'km' : 'Unknown'}`);
+            
+            // Try to match track names with segments
+            const segmentNumbers = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', 'cw01', 'cw02', 'cw03', 'cw04', 'cw05'];
+            for (const segNum of segmentNumbers) {
+                if (trackName.includes(segNum) || trackName.includes(segNum.replace('cw', 'collegiate west'))) {
+                    console.log(`  🎯 POTENTIAL MATCH: Segment ${segNum}`);
+                }
+            }
+        }
+    });
 }
 
 // GPX parsing is now handled by GPXParser.js library
@@ -108,7 +161,9 @@ function computeCumulativeMeters(coords) {
 }
 
 function processSegmentData(routeData) {
-    if (!trailGpxParser || !gpxTrailPoints || gpxTrailPoints.length === 0) {
+    console.log('=== ORDERED GPX PROCESSING v3.0 ===');
+    
+    if (!trailGpxParser) {
         console.warn('No GPX data available, creating interpolated segments');
         coloradoTrailSegments = routeData.map((segment, index) => {
             const startCoords = [segment.start_coords.latitude, segment.start_coords.longitude];
@@ -118,55 +173,208 @@ function processSegmentData(routeData) {
         });
         return;
     }
-
-    console.log('=== REFACTORED SEGMENT PROCESSING ===');
-    const track = trailGpxParser.tracks[0];
-    const allPoints = track.points;
     
-    console.log(`GPX Track: "${track.name}"`);
-    console.log(`GPX has ${allPoints.length} points, ${track.distance.total.toFixed(0)}m total`);
-    console.log(`GPX starts at: ${allPoints[0].lat.toFixed(4)}, ${allPoints[0].lon.toFixed(4)}`);
-    console.log(`GPX ends at: ${allPoints[allPoints.length-1].lat.toFixed(4)}, ${allPoints[allPoints.length-1].lon.toFixed(4)}`);
+    // Create dynamic track order mapping by finding GPX tracks for each segment number
+    console.log('🔍 Building dynamic track order mapping...');
     
-    console.log('\n=== TARGET SEGMENTS (Route.json) ===');
-    console.log(`Segment 1 (${routeData[0].name}): ${routeData[0].start_coords.latitude.toFixed(4)}, ${routeData[0].start_coords.longitude.toFixed(4)} → ${routeData[0].finish_coords.latitude.toFixed(4)}, ${routeData[0].finish_coords.longitude.toFixed(4)}`);
-    console.log(`Segment ${routeData.length} (${routeData[routeData.length-1].name}): ${routeData[routeData.length-1].start_coords.latitude.toFixed(4)}, ${routeData[routeData.length-1].start_coords.longitude.toFixed(4)} → ${routeData[routeData.length-1].finish_coords.latitude.toFixed(4)}, ${routeData[routeData.length-1].finish_coords.longitude.toFixed(4)}`);
+    const SEGMENT_ORDER = [
+        "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "CW01", "CW02", "CW03", "CW05"
+    ];
     
-    // Strategy: For each segment in route.json, try to find the best matching part of the GPX
+    const CORRECT_TRACK_ORDER = [];
+    
+    // For each segment in correct order, find its corresponding GPX track
+    for (let segmentIndex = 0; segmentIndex < SEGMENT_ORDER.length; segmentIndex++) {
+        const targetSegment = SEGMENT_ORDER[segmentIndex];
+        let foundTrackIndex = -1;
+        
+        // Search through all GPX tracks to find the one that matches this segment
+        for (let trackIndex = 0; trackIndex < trailGpxParser.tracks.length; trackIndex++) {
+            const track = trailGpxParser.tracks[trackIndex];
+            if (track.name && track.name.toLowerCase().startsWith(targetSegment.toLowerCase())) {
+                foundTrackIndex = trackIndex;
+                break;
+            }
+        }
+        
+        if (foundTrackIndex >= 0) {
+            CORRECT_TRACK_ORDER.push({
+                gpxTrackIndex: foundTrackIndex,
+                name: trailGpxParser.tracks[foundTrackIndex].name,
+                segmentNumber: targetSegment
+            });
+            console.log(`   Segment ${segmentIndex + 1} (${targetSegment}) → GPX Track ${foundTrackIndex}: "${trailGpxParser.tracks[foundTrackIndex].name}"`);
+        } else {
+            CORRECT_TRACK_ORDER.push(null);
+            console.log(`   ⚠️  Segment ${segmentIndex + 1} (${targetSegment}) → No matching GPX track found`);
+        }
+    }
+    
+    console.log('🗺️  Using dynamic track order mapping for correct sequencing');
+    
     let segments = [];
     let gpxMatchCount = 0;
     let interpolatedCount = 0;
     
+    // Process segments in the correct order using our mapping
     for (let i = 0; i < routeData.length; i++) {
         const segmentData = routeData[i];
         const startCoords = [segmentData.start_coords.latitude, segmentData.start_coords.longitude];
         const endCoords = [segmentData.finish_coords.latitude, segmentData.finish_coords.longitude];
         
-        console.log(`\n--- Processing ${segmentData.name} ---`);
-        console.log(`Target: ${startCoords[0].toFixed(4)}, ${startCoords[1].toFixed(4)} → ${endCoords[0].toFixed(4)}, ${endCoords[1].toFixed(4)}`);
+        console.log(`\n--- Segment ${i+1}: ${segmentData.name} ---`);
         
-        // Find the best matching section of GPX for this segment
-        const segmentPath = findGpxSegmentForCoordinates(allPoints, startCoords, endCoords, i);
+        // Get the correct GPX track for this segment using our dynamic mapping
+        const trackMapping = CORRECT_TRACK_ORDER[i];
         
-        if (segmentPath && segmentPath.length >= 2) {
-            console.log(`✓ Using REAL GPS TRACK with ${segmentPath.length} points`);
-            segments.push(buildSegmentObject(segmentData, i, segmentPath, segmentPath[0], segmentPath[segmentPath.length-1]));
-            gpxMatchCount++;
+        if (trackMapping && trackMapping.gpxTrackIndex >= 0 && trailGpxParser.tracks[trackMapping.gpxTrackIndex]) {
+            const gpxTrack = trailGpxParser.tracks[trackMapping.gpxTrackIndex];
+            
+            console.log(`✅ Using GPX track ${trackMapping.gpxTrackIndex}: "${gpxTrack.name}"`);
+            console.log(`   Segment ${trackMapping.segmentNumber} correctly mapped`);
+            
+            if (gpxTrack.points && gpxTrack.points.length >= 2) {
+                const trackCoords = gpxTrack.points.map(p => [p.lat, p.lon]);
+                
+                // Use GPX coordinates as the true start/end points (no adjustment to route.json)
+                const gpxStartCoords = trackCoords[0];
+                const gpxEndCoords = trackCoords[trackCoords.length - 1];
+                
+                console.log(`   📍 Using ${trackCoords.length} GPS points with TRUE GPS start/end coordinates`);
+                console.log(`   🎯 GPS start: [${gpxStartCoords[0].toFixed(6)}, ${gpxStartCoords[1].toFixed(6)}]`);
+                console.log(`   🎯 GPS end: [${gpxEndCoords[0].toFixed(6)}, ${gpxEndCoords[1].toFixed(6)}]`);
+                
+                segments.push(buildSegmentObject(segmentData, i, trackCoords, gpxStartCoords, gpxEndCoords));
+                gpxMatchCount++;
+            } else {
+                console.log(`   ✗ Track has no points, using interpolated path`);
+                const interpolatedPath = createInterpolatedPath(startCoords, endCoords);
+                segments.push(buildSegmentObject(segmentData, i, interpolatedPath, startCoords, endCoords));
+                interpolatedCount++;
+            }
         } else {
-            console.log(`✗ No GPX match found, using interpolated path`);
+            console.log(`   ✗ No track mapping found for segment ${i+1}, using interpolated path`);
             const interpolatedPath = createInterpolatedPath(startCoords, endCoords);
             segments.push(buildSegmentObject(segmentData, i, interpolatedPath, startCoords, endCoords));
             interpolatedCount++;
         }
     }
     
-    console.log(`\n=== SUMMARY ===`);
-    console.log(`Successfully processed ${segments.length} segments:`);
+    console.log(`\n=== ORDERED RESULTS ===`);
+    console.log(`Successfully processed ${segments.length} segments IN CORRECT ORDER:`);
     console.log(`  🛰️  Real GPS tracks: ${gpxMatchCount} segments`);
     console.log(`  📐 Interpolated paths: ${interpolatedCount} segments`);
     console.log(`  📊 GPS coverage: ${((gpxMatchCount/segments.length)*100).toFixed(1)}%`);
+    console.log(`  🔄 Sequential order: GUARANTEED`);
     
     coloradoTrailSegments = segments;
+}
+
+function findMatchingTrackForSegment(segmentData, segmentNumber) {
+    if (!trailGpxParser.tracks) return null;
+    
+    const segmentName = segmentData.name.toLowerCase();
+    
+    // Create search patterns for this segment
+    const patterns = [
+        `${segmentNumber.toString().padStart(2, '0')}`,  // "01", "02", etc.
+        `segment ${segmentNumber}`,                       // "segment 1"
+        `seg ${segmentNumber}`,                          // "seg 1"
+        segmentNumber > 11 ? `cw0${segmentNumber - 11}` : null,  // "cw01" for collegiate west
+        segmentNumber > 11 ? `collegiate west 0${segmentNumber - 11}` : null,
+    ].filter(Boolean);
+    
+    // Add location-based patterns
+    if (segmentName.includes('waterton')) patterns.push('waterton');
+    if (segmentName.includes('south platte')) patterns.push('south platte', 'platte');
+    if (segmentName.includes('little scraggy')) patterns.push('little scraggy', 'scraggy');
+    if (segmentName.includes('rolling creek')) patterns.push('rolling creek');
+    if (segmentName.includes('long gulch')) patterns.push('long gulch');
+    if (segmentName.includes('kenosha')) patterns.push('kenosha');
+    if (segmentName.includes('gold hill')) patterns.push('gold hill');
+    if (segmentName.includes('copper mountain')) patterns.push('copper mountain');
+    if (segmentName.includes('tennessee')) patterns.push('tennessee');
+    if (segmentName.includes('timberline')) patterns.push('timberline');
+    if (segmentName.includes('mount massive')) patterns.push('mount massive', 'massive');
+    if (segmentName.includes('clear creek')) patterns.push('clear creek');
+    if (segmentName.includes('twin lakes')) patterns.push('twin lakes');
+    if (segmentName.includes('sheep gulch')) patterns.push('sheep gulch');
+    if (segmentName.includes('cottonwood')) patterns.push('cottonwood');
+    if (segmentName.includes('tin cup')) patterns.push('tin cup');
+    if (segmentName.includes('boss lake')) patterns.push('boss lake');
+    
+    console.log(`  🔍 Searching for patterns: ${patterns.join(', ')}`);
+    
+    // Search through all tracks
+    for (const track of trailGpxParser.tracks) {
+        if (!track.name) continue;
+        
+        const trackName = track.name.toLowerCase();
+        console.log(`  Checking track: "${track.name}"`);
+        
+        for (const pattern of patterns) {
+            if (trackName.includes(pattern.toLowerCase())) {
+                console.log(`  🎯 MATCH! Track "${track.name}" contains "${pattern}"`);
+                return track;
+            }
+        }
+    }
+    
+    return null;
+}
+
+function extractSegmentUsingWaypoints(segmentData, segmentIndex, startCoords, endCoords) {
+    if (!trailGpxParser.tracks || trailGpxParser.tracks.length === 0) return null;
+    
+    const mainTrack = trailGpxParser.tracks[0];
+    if (!mainTrack.points || mainTrack.points.length === 0) return null;
+    
+    const trackCoords = mainTrack.points.map(p => [p.lat, p.lon]);
+    
+    // Find waypoints near the start and end coordinates
+    const startWaypoint = findClosestWaypoint(startCoords);
+    const endWaypoint = findClosestWaypoint(endCoords);
+    
+    console.log(`  Start waypoint: ${startWaypoint ? startWaypoint.name : 'None found'}`);
+    console.log(`  End waypoint: ${endWaypoint ? endWaypoint.name : 'None found'}`);
+    
+    if (startWaypoint && endWaypoint) {
+        // Find these waypoint locations in the main track
+        const startIdx = findClosestPointIndex(trackCoords, [startWaypoint.lat, startWaypoint.lon]);
+        const endIdx = findClosestPointIndex(trackCoords, [endWaypoint.lat, endWaypoint.lon]);
+        
+        if (startIdx !== null && endIdx !== null && startIdx < endIdx) {
+            const segmentPath = trackCoords.slice(startIdx, endIdx + 1);
+            
+            // Keep original GPS waypoint coordinates (no adjustment)
+            console.log(`  ✅ Found waypoint-based segment: ${segmentPath.length} points`);
+            console.log(`  Original GPS start: [${segmentPath[0][0].toFixed(6)}, ${segmentPath[0][1].toFixed(6)}]`);
+            console.log(`  Original GPS end: [${segmentPath[segmentPath.length-1][0].toFixed(6)}, ${segmentPath[segmentPath.length-1][1].toFixed(6)}]`);
+            return segmentPath;
+        }
+    }
+    
+    // Fallback: try coordinate-based matching with very liberal tolerance
+    console.log(`  🔄 Fallback: trying coordinate matching...`);
+    return findGpxSegmentForCoordinates(mainTrack.points, startCoords, endCoords, segmentIndex);
+}
+
+function findClosestWaypoint(targetCoords) {
+    if (!trailGpxParser.waypoints || trailGpxParser.waypoints.length === 0) return null;
+    
+    let closest = null;
+    let minDistance = Number.MAX_VALUE;
+    
+    for (const waypoint of trailGpxParser.waypoints) {
+        const distance = calculateDistance([waypoint.lat, waypoint.lon], targetCoords);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closest = waypoint;
+        }
+    }
+    
+    // Only return if reasonably close (within ~50 miles)
+    return minDistance < 0.5 ? closest : null;
 }
 
 function findGpxSegmentForCoordinates(allPoints, startCoords, endCoords, segmentIndex) {
@@ -262,9 +470,9 @@ function extractGpsTrackBetweenPoints(gpxCoords, startIdx, endIdx, targetStart, 
         console.log(`Sampled to ${finalPath.length} points`);
     }
     
-    // Adjust endpoints to match target coordinates
-    finalPath[0] = targetStart;
-    finalPath[finalPath.length - 1] = targetEnd;
+    // Keep original GPS endpoints (no adjustment to route.json coordinates)
+    console.log(`Preserving original GPS start: [${finalPath[0][0].toFixed(6)}, ${finalPath[0][1].toFixed(6)}]`);
+    console.log(`Preserving original GPS end: [${finalPath[finalPath.length-1][0].toFixed(6)}, ${finalPath[finalPath.length-1][1].toFixed(6)}]`);
     
     // Calculate winding ratio to verify this looks like a real trail
     const straightDistance = calculateDistance(targetStart, targetEnd);
@@ -308,9 +516,8 @@ function findSegmentByDistance(track, startCoords, endCoords, segmentIndex) {
                 console.log(`Found potential segment i=${i}-${j}, distance=${segmentDistance.toFixed(0)}m, ratio=${distanceRatio.toFixed(2)}`);
                 
                 if (segmentCoords.length >= 2) {
-                    // Adjust endpoints
-                    segmentCoords[0] = startCoords;
-                    segmentCoords[segmentCoords.length - 1] = endCoords;
+                    // Keep original GPS endpoints (no adjustment)
+                    console.log(`Using original GPS segment endpoints from distance matching`);
                     return segmentCoords;
                 }
             }
@@ -464,7 +671,7 @@ function addStartFinishMarkers() {
             iconAnchor: [15, 15]
         })
     }).addTo(map);
-    finishMarker.bindPopup("<b>Finish: Monarch Pass Area</b><br>258.2 miles completed! What an achievement!");
+    finishMarker.bindPopup("<b>Finish: Boss Lake TH</b><br>All 15 segments completed! What an incredible achievement!");
 }
 
 function getSegmentElevationData(segmentId) {
@@ -484,7 +691,7 @@ function getSegmentElevationData(segmentId) {
         12: { gain: 2680, loss: 3180, minElevation: 8800, maxElevation: 11680 },
         13: { gain: 3840, loss: 3240, minElevation: 8400, maxElevation: 12200 },
         14: { gain: 2280, loss: 3680, minElevation: 7800, maxElevation: 10840 },
-        15: { gain: 1680, loss: 1480, minElevation: 8200, maxElevation: 10120 }
+        15: { gain: 1680, loss: 2180, minElevation: 8200, maxElevation: 11200 }
     };
     
     return elevationData[segmentId] || { gain: 2000, loss: 1500, minElevation: 8000, maxElevation: 10000 };
@@ -505,8 +712,8 @@ function getSegmentHighlights(segmentId) {
         11: "Collegiate Peaks wilderness, stunning mountain vistas",
         12: "Heart of the Collegiate Peaks, challenging terrain",
         13: "Most challenging segment, Collegiate West route",
-        14: "Approaching Salida, descending towards the Arkansas River",
-        15: "Final segment! Celebrating the achievement at Monarch Pass area"
+        14: "Approaching Salida, descending towards the Arkansas River", 
+        15: "Final segment! Boss Lake and the ultimate finish at the main Colorado Trail route"
     };
     
     return "Beautiful Colorado wilderness experience";
@@ -542,7 +749,7 @@ function loadSegmentList() {
     welcomeDiv.className = 'welcome-message';
     welcomeDiv.innerHTML = `
         <h3>Welcome to Onyx's Adventure!</h3>
-        <p>From Waterton Canyon in Littleton to Monarch Pass, Onyx conquered 15 segments of the Colorado Trail. Click the animation button to watch their incredible journey unfold!</p>
+        <p>From Waterton Canyon in Littleton to Boss Lake, Onyx conquered 15 segments of the Colorado Trail including the challenging Collegiate West route. Click the animation button to watch their incredible journey unfold!</p>
         
         <div class="adventure-highlights">
             <h4><i class="fas fa-paw"></i> Wildlife Encounters</h4>
@@ -908,7 +1115,7 @@ function showCompletionMessage() {
             <div class="celebration-stats">
                 <div class="celebration-stat">
                     <i class="fas fa-mountain"></i>
-                    <span>14 segments completed</span>
+                    <span>15 segments completed</span>
                 </div>
                 <div class="celebration-stat">
                     <i class="fas fa-calendar"></i>
